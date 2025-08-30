@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créations de Perles de Corail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background-color: #1C2833; /* Noir de charbon */
+            color: #EAECEE; /* Blanc doux */
+            overflow-x: hidden;
+        }
+        .font-heading {
+            font-family: 'Playfair Display', serif;
+        }
+        .star {
+            position: absolute;
+            background-color: #B8860B; /* Doré */
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+        @keyframes twinkle {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        .card {
+            background-color: #2C3E50; /* Bleu de minuit */
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #B8860B; /* Doré */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .thumbnail {
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .thumbnail.active {
+            border-color: #B8860B; /* Doré */
+        }
+        .image-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .close-btn {
+            position: absolute;
+            top: -1rem;
+            right: -1rem;
+            background: #B8860B; /* Doré */
+            color: white;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .close-btn:hover {
+            background: #DAA520; /* Doré plus clair */
+        }
+    </style>
+</head>
+<body class="relative min-h-screen">
+    <!-- Star animation container -->
+    <div id="stars-container" class="absolute inset-0 z-0"></div>
+
+    <!-- Main content -->
+    <div class="relative z-10 p-8 md:p-16">
+        <!-- Header Section -->
+        <header class="text-center mb-16">
+            <h1 id="header-title" class="font-heading text-5xl md:text-6xl font-extrabold tracking-tight text-[#B8860B] mb-4">Créations Artisanales</h1>
+            <p id="header-subtitle" class="text-lg md:text-xl font-medium max-w-2xl mx-auto text-[#EAECEE]">Découvrez l'élégance intemporelle de nos bracelets en pierre naturelle, conçus avec passion et soin.</p>
+        </header>
+
+        <!-- Product Gallery Section -->
+        <section id="product-gallery" class="mb-16">
+            <h2 class="font-heading text-3xl font-bold mb-8 text-center text-[#B8860B]">Notre Collection</h2>
+            <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Les cartes de produits seront injectées ici par JavaScript -->
+                <div id="loading-indicator" class="col-span-full text-center text-[#EAECEE]">Chargement des produits...</div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="add-product-btn" class="bg-[#B8860B] hover:bg-[#DAA520] text-white font-bold py-3 px-6 rounded-full transition-all duration-300 ease-in-out shadow-lg hidden">
+                    Ajouter un Produit
+                </button>
+                <button id="edit-site-info-btn" class="bg-[#2C3E50] hover:bg-[#34495E] text-white font-bold py-3 px-6 rounded-full transition-all duration-300 ease-in-out shadow-lg hidden">
+                    Modifier les informations du site
+                </button>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact-section" class="mb-16 text-center">
+            <h2 class="font-heading text-3xl font-bold mb-8 text-[#B8860B]">Contactez-nous</h2>
+            <div class="card p-8 max-w-lg mx-auto">
+                <p id="contact-description" class="mb-4">Pour toute demande de renseignements ou pour passer une commande personnalisée, n'hésitez pas à nous contacter.</p>
+                <p class="mb-4 text-sm text-[#EAECEE]">ID de l'utilisateur : <span id="user-id"></span></p>
+                <a id="contact-email" href="mailto:contact@email.com" class="text-[#B8860B] font-semibold hover:underline">contact@email.com</a>
+                <div id="external-link-container" class="mt-4 hidden">
+                    <a id="external-link" href="#" target="_blank" class="text-[#B8860B] font-semibold hover:underline"></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal for adding products -->
+        <div id="add-product-modal" class="fixed inset-0 bg-[#1C2833] bg-opacity-75 flex items-center justify-center hidden z-50">
+            <div class="bg-[#2C3E50] p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
+                <h3 class="font-heading text-2xl font-bold mb-4 text-center text-[#EAECEE]">Nouveau Produit</h3>
+                <form id="add-product-form" class="space-y-4">
+                    <div>
+                        <label for="product-name" class="block text-[#EAECEE] mb-1">Nom du Bracelet</label>
+                        <input type="text" id="product-name" name="name" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required>
+                    </div>
+                    <div>
+                        <label for="product-description" class="block text-[#EAECEE] mb-1">Description</label>
+                        <textarea id="product-description" name="description" rows="3" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required></textarea>
+                        <button type="button" id="generate-description-btn" class="mt-2 bg-[#4B0082] hover:bg-[#581F93] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out">
+                            ✨ Générer la description
+                        </button>
+                    </div>
+                    <div>
+                        <label for="product-image-file" class="block text-[#EAECEE] mb-1">Images du Bracelet (plusieurs fichiers)</label>
+                        <input type="file" id="product-image-file" name="image" multiple class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" accept="image/*" required>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <button type="submit" id="submit-btn" class="bg-[#B8860B] hover:bg-[#DAA520] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out flex items-center">
+                            <span id="submit-text">Ajouter</span>
+                            <div id="submit-loader" class="loader ml-2 hidden"></div>
+                        </button>
+                        <button type="button" id="close-modal-btn" class="bg-[#2C3E50] hover:bg-[#34495E] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal for editing site info -->
+        <div id="edit-site-info-modal" class="fixed inset-0 bg-[#1C2833] bg-opacity-75 flex items-center justify-center hidden z-50">
+            <div class="bg-[#2C3E50] p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
+                <h3 class="font-heading text-2xl font-bold mb-4 text-center text-[#EAECEE]">Modifier les Informations du Site</h3>
+                <form id="edit-site-info-form" class="space-y-4">
+                    <div>
+                        <label for="edit-header-title" class="block text-[#EAECEE] mb-1">Titre de l'en-tête</label>
+                        <input type="text" id="edit-header-title" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required>
+                    </div>
+                    <div>
+                        <label for="edit-header-subtitle" class="block text-[#EAECEE] mb-1">Sous-titre de l'en-tête</label>
+                        <textarea id="edit-header-subtitle" rows="2" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required></textarea>
+                    </div>
+                    <div>
+                        <label for="edit-contact-description" class="block text-[#EAECEE] mb-1">Description du contact</label>
+                        <textarea id="edit-contact-description" rows="2" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required></textarea>
+                    </div>
+                    <div>
+                        <label for="edit-contact-email" class="block text-[#EAECEE] mb-1">Email de contact</label>
+                        <input type="email" id="edit-contact-email" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]" required>
+                    </div>
+                    <div>
+                        <label for="edit-external-link" class="block text-[#EAECEE] mb-1">Lien vers un autre site (optionnel)</label>
+                        <input type="url" id="edit-external-link" class="w-full p-2 rounded-md bg-[#1C2833] text-[#EAECEE] border border-[#2C3E50] focus:outline-none focus:border-[#B8860B]">
+                    </div>
+                    <div class="flex justify-between mt-4">
+                        <button type="submit" class="bg-[#B8860B] hover:bg-[#DAA520] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out">Enregistrer</button>
+                        <button type="button" id="close-edit-modal-btn" class="bg-[#2C3E50] hover:bg-[#34495E] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Image zoom modal -->
+        <div id="image-zoom-modal" class="fixed inset-0 bg-[#1C2833] bg-opacity-90 flex items-center justify-center hidden z-50">
+            <div class="image-modal-content">
+                <span class="close-btn" id="close-image-zoom-btn">&times;</span>
+                <img id="zoomed-image" src="" alt="Image agrandie">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Message box for alerts -->
+    <div id="message-box" class="fixed top-4 left-1/2 -translate-x-1/2 bg-[#2C3E50] text-[#EAECEE] p-4 rounded-lg shadow-xl hidden z-50">
+        <p id="message-text"></p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let userId = null;
+        const productsContainer = document.getElementById('products-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const userIdDisplay = document.getElementById('user-id');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        const submitLoader = document.getElementById('submit-loader');
+
+        const addProductBtn = document.getElementById('add-product-btn');
+        const editSiteInfoBtn = document.getElementById('edit-site-info-btn');
+
+        const headerTitle = document.getElementById('header-title');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const contactDescription = document.getElementById('contact-description');
+        const contactEmail = document.getElementById('contact-email');
+        const externalLinkContainer = document.getElementById('external-link-container');
+        const externalLink = document.getElementById('external-link');
+
+        const generateDescriptionBtn = document.getElementById('generate-description-btn');
+        const productDescriptionTextarea = document.getElementById('product-description');
+        const productImageFile = document.getElementById('product-image-file');
+
+        // Modal for image zoom
+        const imageZoomModal = document.getElementById('image-zoom-modal');
+        const zoomedImage = document.getElementById('zoomed-image');
+        const closeImageZoomBtn = document.getElementById('close-image-zoom-btn');
+
+        // Close image zoom modal
+        closeImageZoomBtn.addEventListener('click', () => {
+            imageZoomModal.classList.add('hidden');
+        });
+
+        // Fonction pour afficher une boîte de message personnalisée
+        function showMessage(message) {
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000); // Masquer après 3 secondes
+        }
+
+        // Fonction pour créer une carte de produit
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'card p-6 flex flex-col justify-between';
+
+            // Assurez-vous que les images existent et sont un tableau
+            const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : ['https://placehold.co/600x400/2C3E50/EAECEE?text=Image'];
+            let slideshowInterval = null;
+            let currentImageIndex = 0;
+
+            const mainImageSrc = images[0];
+            const thumbnailsHtml = images.map((img, index) => `
+                <img src="${img}" alt="Miniature ${index + 1}" data-index="${index}" class="thumbnail w-12 h-12 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity ${index === 0 ? 'active' : ''}">
+            `).join('');
+
+            // Mise à jour de la structure HTML pour l'alignement
+            card.innerHTML = `
+                <img src="${mainImageSrc}" alt="${product.name}" class="main-image rounded-lg mb-4 object-cover h-64 w-full transition-opacity duration-300 cursor-pointer">
+                <div class="flex flex-wrap justify-center gap-2 mb-4">
+                    ${thumbnailsHtml}
+                </div>
+                <div class="flex flex-col flex-grow">
+                    <h3 class="font-heading text-xl font-semibold text-[#B8860B] mb-2">${product.name}</h3>
+                    <p class="text-[#EAECEE] mb-4 flex-grow">${product.description}</p>
+                    <div class="flex justify-between items-center mt-4">
+                        <button class="generate-marketing-btn self-start bg-[#4B0082] hover:bg-[#581F93] text-white font-bold py-2 px-4 rounded-full transition-all duration-300 ease-in-out">✨ Publier</button>
+                        ${userId ? `<button class="delete-product-btn self-end text-red-400 hover:text-red-500 font-bold transition-colors duration-300">Supprimer</button>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Gérer le changement d'image au clic sur une miniature
+            const mainImage = card.querySelector('.main-image');
+            const thumbnails = card.querySelectorAll('.thumbnail');
+            thumbnails.forEach(thumb => {
+                thumb.addEventListener('click', (e) => {
+                    const newSrc = e.target.getAttribute('src');
+                    mainImage.src = newSrc;
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentImageIndex = parseInt(e.target.dataset.index, 10);
+                });
+            });
+
+            // Gérer le zoom de l'image au clic sur l'image principale
+            mainImage.addEventListener('click', () => {
+                zoomedImage.src = mainImage.src;
+                imageZoomModal.classList.remove('hidden');
+            });
+
+            // Gérer le diaporama au survol de la carte
+            if (images.length > 1) {
+                card.addEventListener('mouseenter', () => {
+                    slideshowInterval = setInterval(() => {
+                        currentImageIndex = (currentImageIndex + 1) % images.length;
+                        mainImage.src = images[currentImageIndex];
+                        thumbnails.forEach(t => t.classList.remove('active'));
+                        thumbnails[currentImageIndex].classList.add('active');
+                    }, 2000); // Change d'image toutes les 2 secondes
+                });
+                card.addEventListener('mouseleave', () => {
+                    clearInterval(slideshowInterval);
+                    // Réinitialiser à la première image à la sortie de la souris
+                    currentImageIndex = 0;
+                    mainImage.src = images[currentImageIndex];
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    thumbnails[currentImageIndex].classList.add('active');
+                });
+            }
+
+            // Gérer la suppression et la génération de texte marketing
+            const generateMarketingBtn = card.querySelector('.generate-marketing-btn');
+            generateMarketingBtn.addEventListener('click', () => {
+                generateMarketingText(product.name, product.description, generateMarketingBtn);
+            });
+            if (userId) {
+                const deleteBtn = card.querySelector('.delete-product-btn');
+                deleteBtn.addEventListener('click', () => deleteProduct(product.id));
+            }
+            return card;
+        }
+
+        // Fonction pour lire tous les fichiers en Base64 (utilisée pour l'IA)
+        async function readAllFilesAsBase64(files) {
+            const promises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            });
+            return Promise.all(promises);
+        }
+
+        // Fonction pour télécharger une image vers Firebase Storage
+        // Cette fonction est commentée pour permettre l'utilisation dans l'environnement de prévisualisation
+        /*
+        async function uploadImage(file) {
+            const filePath = `images/${userId}/${Date.now()}_${file.name}`;
+            const imageRef = ref(storage, filePath);
+            await uploadBytes(imageRef, file);
+            return await getDownloadURL(imageRef);
+        }
+        */
+
+        // Fonction pour mettre à jour l'état du bouton et du formulaire
+        function updateSubmitButtonState(isLoading) {
+            if (isLoading) {
+                submitText.textContent = 'Chargement...';
+                submitLoader.classList.remove('hidden');
+                submitBtn.disabled = true;
+            } else {
+                submitText.textContent = 'Ajouter';
+                submitLoader.classList.add('hidden');
+                submitBtn.disabled = false;
+                addProductForm.reset();
+                addProductModal.classList.add('hidden');
+            }
+        }
+
+        // Ajout d'un nouveau produit à Firestore
+        const addProductForm = document.getElementById('add-product-form');
+        addProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showMessage('Authentification en cours, veuillez réessayer dans un instant.');
+                return;
+            }
+
+            const files = productImageFile.files;
+            if (files.length === 0) {
+                showMessage('Veuillez sélectionner au moins une image.');
+                return;
+            }
+
+            updateSubmitButtonState(true);
+
+            try {
+                // Création d'URL temporaires pour la prévisualisation
+                const imageUrls = Array.from(files).map(file => URL.createObjectURL(file));
+
+                const newProduct = {
+                    name: document.getElementById('product-name').value,
+                    description: productDescriptionTextarea.value,
+                    images: imageUrls, // Sauvegarde les URLs temporaires
+                    timestamp: Date.now()
+                };
+
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bracelets'), newProduct);
+
+                showMessage('Produit ajouté avec succès!');
+            } catch (error) {
+                console.error("Erreur lors de l'ajout du document: ", error);
+                showMessage("Erreur lors de l'ajout du produit.");
+            } finally {
+                updateSubmitButtonState(false);
+            }
+        });
+
+        // Fonction pour générer une description de produit avec Gemini
+        async function generateDescription() {
+            const files = productImageFile.files;
+            if (files.length === 0) {
+                showMessage('Veuillez d\'abord sélectionner une image pour générer une description.');
+                return;
+            }
+            
+            const originalBtnText = generateDescriptionBtn.textContent;
+            generateDescriptionBtn.textContent = 'Génération...';
+            generateDescriptionBtn.disabled = true;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const base64Images = await readAllFilesAsBase64(files);
+                const imageParts = base64Images.map(img => ({
+                    inlineData: {
+                        mimeType: img.split(';')[0].split(':')[1],
+                        data: img.split(',')[1]
+                    }
+                }));
+
+                const userPrompt = "Créez une description de produit créative et concise en français pour un bracelet. Le texte doit être engageant et donner envie d'acheter le produit. Basez-vous uniquement sur les images fournies et ne mentionnez pas d'informations qui n'y sont pas visibles (par exemple, les noms de pierres).";
+                
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: userPrompt },
+                            ...imageParts
+                        ]
+                    }],
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    productDescriptionTextarea.value = generatedText;
+                } else {
+                    showMessage("Impossible de générer la description. Veuillez réessayer.");
+                }
+            } catch (error) {
+                console.error("Erreur lors de la génération de la description: ", error);
+                showMessage("Erreur de connexion avec l'IA. Veuillez réessayer plus tard.");
+            } finally {
+                generateDescriptionBtn.textContent = originalBtnText;
+                generateDescriptionBtn.disabled = false;
+            }
+        }
+
+        // Fonction pour générer un texte marketing avec Gemini
+        async function generateMarketingText(name, description, button) {
+            const originalBtnText = button.textContent;
+            button.textContent = 'Génération...';
+            button.disabled = true;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const userPrompt = `Rédige un post pour les réseaux sociaux pour le bracelet suivant. Utilise un ton dynamique et inclus 3 à 5 hashtags pertinents en français. Nom: "${name}", Description: "${description}"`;
+                
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: userPrompt }]
+                    }],
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    showMessage(`Voici votre texte marketing : \n\n${generatedText}`);
+                } else {
+                    showMessage("Impossible de générer le texte marketing. Veuillez réessayer.");
+                }
+            } catch (error) {
+                console.error("Erreur lors de la génération du texte marketing: ", error);
+                showMessage("Erreur de connexion avec l'IA. Veuillez réessayer plus tard.");
+            } finally {
+                button.textContent = originalBtnText;
+                button.disabled = false;
+            }
+        }
+
+
+        // Suppression d'un produit de Firestore
+        async function deleteProduct(productId) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bracelets', productId));
+                showMessage('Produit supprimé!');
+            } catch (e) {
+                console.error("Erreur lors de la suppression du document: ", e);
+                showMessage("Erreur lors de la suppression du produit.");
+            }
+        }
+
+        // Fonction pour charger et rendre les produits depuis Firestore
+        function loadProducts() {
+            loadingIndicator.classList.remove('hidden');
+            const productsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bracelets');
+            onSnapshot(productsRef, (querySnapshot) => {
+                const products = [];
+                querySnapshot.forEach((doc) => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+                renderProducts(products);
+                loadingIndicator.classList.add('hidden');
+            }, (error) => {
+                console.error("Erreur lors de l'écoute des changements: ", error);
+                showMessage("Échec du chargement des produits.");
+                loadingIndicator.textContent = "Échec du chargement des produits.";
+            });
+        }
+
+        function renderProducts(products) {
+            productsContainer.innerHTML = '';
+            if (products.length === 0) {
+                productsContainer.innerHTML = '<div class="col-span-full text-center text-[#EAECEE]">Aucun produit à afficher. Ajoutez le premier !</div>';
+            } else {
+                products.forEach(product => {
+                    productsContainer.appendChild(createProductCard(product));
+                });
+            }
+        }
+
+        // Fonction pour charger et rendre les informations du site
+        function loadSiteInfo() {
+            const siteInfoRef = doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'info');
+            onSnapshot(siteInfoRef, (docSnap) => {
+                const data = docSnap.exists() ? docSnap.data() : {
+                    title: "Créations Artisanales",
+                    subtitle: "Découvrez l'élégance intemporelle de nos bracelets en pierre naturelle, conçus avec passion et soin.",
+                    contactDesc: "Pour toute demande de renseignements ou pour passer une commande personnalisée, n'hésitez pas à nous contacter.",
+                    contactEmail: "contact@email.com",
+                    externalLink: ""
+                };
+                headerTitle.textContent = data.title;
+                headerSubtitle.textContent = data.subtitle;
+                contactDescription.textContent = data.contactDesc;
+                contactEmail.textContent = data.contactEmail;
+                contactEmail.href = `mailto:${data.contactEmail}`;
+
+                if (data.externalLink && data.externalLink.trim() !== '') {
+                    externalLinkContainer.classList.remove('hidden');
+                    externalLink.href = data.externalLink;
+                    externalLink.textContent = `Vers la boutique`;
+                } else {
+                    externalLinkContainer.classList.add('hidden');
+                }
+
+                document.getElementById('edit-header-title').value = data.title;
+                document.getElementById('edit-header-subtitle').value = data.subtitle;
+                document.getElementById('edit-contact-description').value = data.contactDesc;
+                document.getElementById('edit-contact-email').value = data.contactEmail;
+                document.getElementById('edit-external-link').value = data.externalLink;
+
+            }, (error) => {
+                console.error("Erreur lors de l'écoute des informations du site: ", error);
+            });
+        }
+        
+        // Formulaire de modification des informations du site
+        const editSiteInfoForm = document.getElementById('edit-site-info-form');
+        editSiteInfoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedInfo = {
+                title: document.getElementById('edit-header-title').value,
+                subtitle: document.getElementById('edit-header-subtitle').value,
+                contactDesc: document.getElementById('edit-contact-description').value,
+                contactEmail: document.getElementById('edit-contact-email').value,
+                externalLink: document.getElementById('edit-external-link').value
+            };
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'info'), updatedInfo, { merge: true });
+                document.getElementById('edit-site-info-modal').classList.add('hidden');
+                showMessage('Informations du site mises à jour avec succès!');
+            } catch (e) {
+                console.error("Erreur lors de la mise à jour des informations: ", e);
+                showMessage("Erreur lors de la mise à jour des informations du site.");
+            }
+        });
+
+        // Modals
+        const addProductModal = document.getElementById('add-product-modal');
+        const editSiteInfoModal = document.getElementById('edit-site-info-modal');
+
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+
+        addProductBtn.addEventListener('click', () => {
+            addProductModal.classList.remove('hidden');
+        });
+
+        editSiteInfoBtn.addEventListener('click', () => {
+            editSiteInfoModal.classList.remove('hidden');
+        });
+
+        // Gérer la réinitialisation du formulaire à la fermeture manuelle de la modale
+        closeModalBtn.addEventListener('click', () => {
+            updateSubmitButtonState(false);
+        });
+
+        closeEditModalBtn.addEventListener('click', () => {
+            editSiteInfoModal.classList.add('hidden');
+        });
+
+        // Fermer les modales si l'on clique en dehors
+        window.addEventListener('click', (e) => {
+            if (e.target === addProductModal) {
+                updateSubmitButtonState(false);
+            }
+            if (e.target === editSiteInfoModal) {
+                editSiteInfoModal.classList.add('hidden');
+            }
+            if (e.target === imageZoomModal) {
+                imageZoomModal.classList.add('hidden');
+            }
+        });
+        
+        // Connecter le bouton de génération de description à la fonction
+        generateDescriptionBtn.addEventListener('click', generateDescription);
+
+        // Animation d'étoiles
+        const starsContainer = document.getElementById('stars-container');
+        function createStar() {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 1; // Taille entre 1 et 4
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+            star.style.animationDelay = `${Math.random() * 2}s`;
+            starsContainer.appendChild(star);
+            setTimeout(() => {
+                star.remove();
+            }, (Math.random() * 2 + 1) * 1000);
+        }
+        setInterval(createStar, 200);
+
+        // Authentification et initialisation de l'application
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                userIdDisplay.textContent = userId;
+                addProductBtn.classList.remove('hidden');
+                editSiteInfoBtn.classList.remove('hidden');
+                loadProducts();
+                loadSiteInfo();
+            } else {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Erreur d'authentification: ", error);
+                    showMessage("Échec de la connexion. Les produits ne seront pas enregistrés.");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
