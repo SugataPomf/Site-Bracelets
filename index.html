@@ -390,15 +390,12 @@
         }
 
         // Fonction pour télécharger une image vers Firebase Storage
-        // Cette fonction est commentée pour permettre l'utilisation dans l'environnement de prévisualisation
-        /*
         async function uploadImage(file) {
             const filePath = `images/${userId}/${Date.now()}_${file.name}`;
             const imageRef = ref(storage, filePath);
             await uploadBytes(imageRef, file);
             return await getDownloadURL(imageRef);
         }
-        */
 
         // Fonction pour mettre à jour l'état du bouton et du formulaire
         function updateSubmitButtonState(isLoading) {
@@ -433,13 +430,14 @@
             updateSubmitButtonState(true);
 
             try {
-                // Création d'URL temporaires pour la prévisualisation
-                const imageUrls = Array.from(files).map(file => URL.createObjectURL(file));
+                const imageUrls = await Promise.all(
+                    Array.from(files).map(file => uploadImage(file))
+                );
 
                 const newProduct = {
                     name: document.getElementById('product-name').value,
                     description: productDescriptionTextarea.value,
-                    images: imageUrls, // Sauvegarde les URLs temporaires
+                    images: imageUrls,
                     timestamp: Date.now()
                 };
 
